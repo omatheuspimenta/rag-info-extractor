@@ -36,15 +36,31 @@ docling_logger = logging.getLogger('docling')
 logtext = logging.getLogger("rich")
 logtext.setLevel(20)
 
-SYSTEM_PROMPT_GENOTYPE = """You are a scientific data extraction assistant specializing in plant genomics, particularly sugarcane and citrus research. Your task is to extract genotype information associated with NCBI accessions (BioProject, SRA, GEO, etc.) from scientific article text.
+SYSTEM_PROMPT_GENOTYPE = """You are a specialized scientific information extraction assistant with expertise in plant genomics, molecular biology, and bioinformatics. Your primary focus is extracting genotype-related information and NCBI accession identifiers from full-text research articles about plant species, particularly sugarcane (Saccharum spp.) and citrus (Citrus spp.).
 
-Key guidelines:
-1. Focus on sugarcane and citrus organisms (including their microbiomes)
-2. Extract ALL genotype information: strain names, cultivar names, wild-type, mutant descriptions, genetic backgrounds
-3. Link each genotype to its corresponding NCBI accession (BioProject, SRA, GEO, etc.)
-4. If information is uncertain or ambiguous, flag it and include the relevant text snippet
-5. If no genotype or accession information is found, return empty results
-6. Be precise - only extract what is explicitly stated in the text"""
+Core Competencies:
+- Deep understanding of plant taxonomy, cultivar naming conventions, and variety nomenclature
+- Recognition of genotype information in various forms: cultivar names, variety designations, strain identifiers, line numbers, wild-type references, mutant designations, breeding codes, and genetic background descriptions
+- Identification of NCBI database identifiers (BioProject, SRA, BioSample, GEO accessions)
+- Ability to distinguish between genotype mentions and other biological concepts
+- Recognition of implicit genotype information from experimental context
+
+Extraction Principles:
+1. Thoroughness: Analyze the ENTIRE document, including abstract, introduction, methods, results, discussion, acknowledgments, data availability statements, and references to supplementary materials
+2. Precision: Only extract information directly related to genotypes/cultivars used in the study
+3. Context awareness: Understand that genotype information may be:
+   - Explicitly stated: "cultivar 'Valencia'"
+   - Implied from context: "commercial variety widely used in Brazil"
+   - Referenced indirectly: "the same accessions as reported in Smith et al. 2020"
+   - Distributed across sections: cultivar mentioned in methods, accession in data availability
+4. Artifact tolerance: Handle noisy text from PDF extraction (irregular line breaks, OCR errors, formatting issues)
+5. Transparency: When information is missing, ambiguous, or located elsewhere, explicitly document this
+
+Output Requirements:
+- Respond ONLY with valid JSON following the specified schema
+- No markdown code blocks, no explanatory text outside the JSON structure
+- Use the "notes" field for observations, uncertainties, or contextual information
+"""
 
 class PromptTemplates:
     def __init__(self, text: str = ""):
@@ -57,43 +73,63 @@ class PromptTemplates:
         }
 
     def _genotype_prompt(self, article_full_text:str) -> str:
+            
+        USER_PROMPT = f"""Extract all genotype and NCBI accession information from the following scientific article. Read the ENTIRE text carefully.
+        Find in Materials and Methods, RNA-Seq analysis, Data Availability or Supplementary Information.
+
+Target Information:
+Genotypes: cultivar names, variety names, breeding lines, strain identifiers, clone designations, wild-type references, mutant names, genetic backgrounds, germplasm accessions, or any designation identifying specific plant genetic material.
+
+NCBI Accessions: BioProject IDs (PRJNA*), SRA IDs (SRR*, SRX*, SRP*), BioSample IDs (SAMN*, SAMD*, SAME*), GEO IDs (GSE*, GSM*), GenBank accessions, or any NCBI database identifier.
+
+Extraction Guidelines:
+
+1. Association: Link each genotype with its corresponding NCBI accession when both are present. If multiple genotypes share the same accession, create separate entries.
+
+2. Confidence Levels:
+   - HIGH: Genotype and accession explicitly mentioned together OR genotype clearly stated with complete information
+   - MEDIUM: Genotype inferred from context, or accession mentioned separately from genotype but linkable
+   - LOW: Ambiguous mentions, incomplete information, or references to external sources
+
+3. Source Location Tracking:
+   - "main text" - information in the primary article body
+   - "supplementary file" - referenced in supplementary materials/tables/datasets
+   - "data availability statement" - mentioned in data/code availability sections
+   - "methods appendix" - in methods or materials sections with detail
+   - "not found" - information not provided anywhere in the document
+
+4. Evidence Text: Include a brief quote (10-30 words) from the article for MEDIUM or LOW confidence entries to justify the extraction.
+
+5. Missing Information Protocol:
+   - If genotype is mentioned but accession is missing: create entry with accession as null, note where accession might be found
+   - If accession is mentioned but genotype is unclear: create entry, use confidence "low" or "medium"
+   - If information is explicitly stated to be in supplementary files: document this in source_location and notes
+   - If neither is found: return empty entries array with explanatory note
+
+6. Multiple Genotypes: Create separate entries for each distinct genotype, even if they share the same study or accession series.
+
+ Article Text:
+{article_full_text}
+
+Required JSON Output Format:
+
+{{
+    "entries": [
+        {{
+            "accession": "string or null",
+            "accession_type": "BioProject | SRA | BioSample | GEO | GenBank | Other | null",
+            "organism": "string (scientific name)",
+            "genotype": "string (cultivar/variety/strain name or description)",
+            "confidence": "high | medium | low",
+            "source_location": "main text | supplementary file | data availability statement | methods appendix | not found",
+            "evidence_text": "string or null (required for medium/low confidence)"
+        }}
+    ],
+    "notes": "string (observations, uncertainties, references to external sources, or explanations)"
+}}
+
+CRITICAL: Return ONLY the JSON object. No additional text, no markdown formatting, no code blocks. DO NOT CREATE information not present in the article, if the information is missing, return null or empty fields as specified.
         """
-        Creates the user prompt with the article text.
-        
-        Args:
-            article_full_text (str): Full text of the scientific article
-        
-        Returns:
-            str: Formatted prompt for the LLM
-        """
-        
-        USER_PROMPT = f"""Extract genotype information and NCBI accessions from the following scientific article.
-
-    Article text:
-    {article_full_text}
-
-    Return your response as JSON with this structure:
-    {{
-        "entries": [
-            {{
-                "accession": "BioProject ID or SRA ID or GEO ID",
-                "accession_type": "BioProject|SRA|GEO|Other",
-                "organism": "organism name (e.g., Saccharum officinarum, Citrus sinensis)",
-                "genotype": "genotype/strain/cultivar description",
-                "confidence": "high|medium|low",
-                "evidence_text": "relevant excerpt from article (only if confidence is medium or low)"
-            }}
-        ],
-        "notes": "any additional relevant notes or uncertainties"
-    }}
-
-    Rules:
-    - If no genotype or accession found, return: {{"entries": [], "notes": "No genotype or accession information found"}}
-    - Include evidence_text ONLY when confidence is "medium" or "low"
-    - Set confidence to "high" only when genotype is explicitly stated with the accession
-    - Set confidence to "medium" when genotype can be inferred from context
-    - Set confidence to "low" when genotype is ambiguous or unclear
-    - For microbiome studies, extract the host plant genotype if available"""
 
         return USER_PROMPT
 
@@ -222,9 +258,6 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument('--input', type=Path, help='Directory containing PDF and JSON files')
     parser.add_argument('--output', type=Path, help='Directory to save results')
     parser.add_argument('--model', default='llama3.1', help='Ollama model name. Available models can be listed with "ollama list" command. Actually we have deepseek-r1 and qwen2.5:14b')
-    # parser.add_argument('--confidence-threshold', type=float, default=0.7, help='Confidence threshold')
-    # parser.add_argument('--max-workers', type=int, default=4, help='Maximum worker threads')
-    # parser.add_argument('--file-limit', type=int, help='Limit number of files to process (for testing)')
     
     return parser
 

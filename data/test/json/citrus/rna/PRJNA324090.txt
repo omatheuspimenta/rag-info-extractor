@@ -1,0 +1,23 @@
+Identifier: Not available in the provided text.
+Study / Article Title: Not available in the provided text.
+DOI / Article Link: Not available in the provided text.
+Organism / Species: "midsweet" sweet orange on Swingle citrumelo rootstock.
+Genotype / Cultivar / Variety: "midsweet" sweet orange.
+Treatment / Experimental Condition: Comparison of healthy vs. Las-infected trees.
+Type of Stress / Experimental Factor: Las infection (biotic stress).
+Intensity / Level of Treatment: Infection was confirmed by visual symptoms and qPCR results.
+Duration / Exposure Time: The trees were 11 years old.
+Collection / Cultivation Location: A grove at Auburndale (28.11 N, 81.79 W), Florida, USA.
+Soil Type: Not specified, but rhizosphere and rhizoplane soil were the target samples.
+Infection Condition: Naturally occurring infection.
+Pathogen / Disease: Las (likely Candidatus Liberibacter asiaticus, causing citrus greening).
+Plant Part / Tissue / Organ Sampled: Rhizosphere and rhizoplane soil from fine root cores. The roots themselves were discarded.
+Plant Development Stage: Mature trees (11 years old).
+Biological Sample Number / Replicate: Three healthy trees and three Las-infected trees. Samples from four corners of each tree were pooled.
+Collection Method / RNA / DNA Extraction:
+    Collection: Rhizosphere soil was collected by brushing roots. Rhizoplane soil was collected by ultra-sonication of roots in PBS buffer. Samples were preserved in LifeGuard soil preservation solution.
+    Extraction Method: Not detailed in this text snippet.
+Sequencing Platform / Technology: Not available in the provided text.
+Submission Date (SRA / GEO): Not available in the provided text.
+Author / Research Group: Not available in the provided text.
+Additional Notes / Observations: The study focused on collecting soil samples adhering to the roots, rather than the plant tissue itself.

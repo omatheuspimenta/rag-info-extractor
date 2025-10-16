@@ -1,0 +1,182 @@
+Citrus - RNA
+##########
+PRJEB6342
+10.1186_s12864-024-10445-5.json
+organism: Citrus
+genotype: C. sinensis; C. limon; C. maxima; C. reticulata; and P. trifoliata.
+
+Do not have more information due to is a database article. 
+
+##########
+Plant Biotechnology Journal - 2015 - Terol - An RNA‐Seq‐based reference transcriptome for Citrus.pdf
+organism: Citrus
+genotype: C. aurantifolia; C. aurantium; C. bergamia; C. clementina; C. deliciosa; C. limon; C. maxima; C. medica; C. paradisi; C. reshni; C. sinensis; Poncirus trifoliata; P. trifoliata
+Sample: ERS485732
+Specie: C. aurantifolia
+Cultivar: Mexican lime
+Group: Micrantha
+Extract from: Young leaf
+
+Sample: ERS485733
+Specie: C. aurantifolia
+Cultivar: Mexican lime
+Group: Micrantha
+Extract from: Open flower
+
+Sample: ERS485734
+Specie: C. aurantium
+Cultivar: Sevillano
+Group: Pummelo
+Extract from: Phloem
+
+Sample: ERS485735
+Specie: C. aurantium
+Cultivar: Sevillano
+Group: Pummelo
+Extract from: Root
+
+Sample: ERS485736
+Specie: C. aurantium
+Cultivar: Sevillano
+Group: Pummelo
+Extract from: Young leaf
+
+Sample: ERS485737
+Specie: C. aurantium
+Cultivar: Sevillano
+Group: Pummelo
+Extract from: Open flower
+
+Sample: ERS485738
+Specie: C. bergamia
+Cultivar: Bergamoto
+Group: Citron
+Extract from: Young leaf
+
+Sample: ERS485739
+Specie: C. bergamia
+Cultivar: Bergamoto
+Group: Citron
+Extract from: Open flower
+
+Sample: ERS485740
+Specie: C. clementina
+Cultivar: Clemenules
+Group: Mandarin
+Extract from: Flowers (green button)
+
+Sample: ERS485741
+Specie: C. clementina
+Cultivar: Clemenules
+Group: Mandarin
+Extract from: Flowers (white button)
+
+Sample: ERS485742
+Specie: C. clementina
+Cultivar: Clemenules
+Group: Mandarin
+Extract from: Flowers (petals elongation)
+
+Sample: ERS485743
+Specie: C. clementina
+Cultivar: Clemenules
+Group: Mandarin
+Extract from: Open flower
+
+Sample: ERS485744
+Specie: C. deliciosa
+Cultivar: Willowleaf
+Group: Mandarin
+Extract from: Young leaf
+
+Sample: ERS485745
+Specie: C. deliciosa
+Cultivar: Willowleaf
+Group: Mandarin
+Extract from: Open flower
+
+Sample: ERS485746
+Specie: C. limon
+Cultivar: Fino lemon
+Group: Citron
+Extract from: Young leaf
+
+Sample: ERS485747
+Specie: C. limon
+Cultivar: Fino lemon
+Group: Citron
+Extract from: Open flower
+
+Sample: ERS485748
+Specie: C. maxima
+Cultivar: Deep Red
+Group: Pummelo
+Extract from: Young leaf
+
+Sample: ERS485749
+Specie: C. maxima
+Cultivar: Deep Red
+Group: Pummelo
+Extract from: Open flower
+
+Sample: ERS485750
+Specie: C. medica
+Cultivar: Citron Diamond
+Group: Citron
+Extract from: Young leaf
+
+Sample: ERS485751
+Specie: C. medica
+Cultivar: Citron Diamond
+Group: Citron
+Extract from: Open flower
+
+Sample: ERS485752
+Specie: C. paradisi
+Cultivar: Star Ruby
+Group: Pummelo
+Extract from: Young leaf
+
+Sample: ERS485753
+Specie: C. paradisi
+Cultivar: Star Ruby
+Group: Pummelo
+Extract from: Open flower
+
+Sample: ERS485754
+Specie: C. reshni
+Cultivar: Cleopatra
+Group: Mandarin
+Extract from: Young leaf
+
+Sample: ERS485755
+Specie: C. reshni
+Cultivar: Cleopatra
+Group: Mandarin
+Extract from: Open flower
+
+Sample: ERS485756
+Specie: C. sinensis
+Cultivar: Navelina
+Group: Pummelo
+Extract from: Young leaf
+
+Sample: ERS485757
+Specie: C. sinensis
+Cultivar: Navelina
+Group: Pummelo
+Extract from: Open flower
+
+Sample: ERS485758
+Specie: Poncirus trifoliata
+Cultivar: Rubidoux
+Group: Poncirus
+Extract from: Root
+
+Sample: ERS485759
+Specie: P. trifoliata
+Cultivar: Rubidoux
+Group: Poncirus
+Extract from: Phloem
+
+

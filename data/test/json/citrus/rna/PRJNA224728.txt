@@ -1,0 +1,30 @@
+PRJNA224728
+
+Identifier: Not available in the provided text.
+Study / Article Title: Not available in the provided text.
+DOI / Article Link: Not available in the provided text.
+Organism / Species: Sweet orange on Swingle citrumelo rootstock (Citrus paradise Macf. × Poncirus trifoliata (L.) Raf.).
+Genotype / Cultivar / Variety: Sweet orange, Swingle citrumelo.
+Treatment / Experimental Condition: Comparison of trees in four stages of citrus blight disease: healthy, pre-blight, blight, and late-blight.
+Type of Stress / Experimental Factor: Citrus blight disease (biotic stress).
+Intensity / Level of Treatment: The conditions were defined by disease progression and water uptake measurements:
+    Healthy: Water uptake > 20 ml/30 s
+    Pre-blight: Healthy at sampling but diagnosed with blight one year later.
+    Blight: Water uptake = 0 ml/30 s
+    Late-blight: Very severe symptoms one year after initial diagnosis.
+Duration / Exposure Time: The trees were approximately 20 years old and were monitored for two years after sampling.
+Collection / Cultivation Location: A citrus grove in St. Cloud (28°15’ N, 81°14’ W).
+Soil Type: Not available in the provided text.
+Infection Condition: Naturally occurring infection.
+Pathogen / Disease: Citrus blight.
+Plant Part / Tissue / Organ Sampled: Lateral root segments (approximately 10 cm long, 0.5 cm diameter).
+Plant Development Stage: Mature trees (approximately 20 years old).
+Biological Sample Number / Replicate: 2 healthy trees, 2 pre-blight trees, 2 blight trees, and 1 late-blight tree. For each tree, eight root segments were collected and pooled.
+Collection Method / RNA / DNA Extraction:
+    Collection: Roots were washed, flash-frozen in liquid nitrogen on-site.
+    RNA Extraction: RNeasy plant mini kit (Qiagen) with On-column DNase digestion. Ribosomal RNA was depleted using the Ribo-Zero™ Magnetic kit.
+    DNA Extraction: DNeasy plant maxi kit (Qiagen).
+Sequencing Platform / Technology: Illumina HiSeq 2000.
+Submission Date (SRA / GEO): Not available in the provided text.
+Author / Research Group: Not available in the provided text.
+Additional Notes / Observations: RNA-Seq libraries were prepared using the Script Seq v2 RNA-Seq library preparation kit. DNA libraries were prepared using a Beckman Coulter SPRI-TE™ workstation.

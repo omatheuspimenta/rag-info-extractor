@@ -1,0 +1,21 @@
+Identifier
+Study / Article Title
+DOI / Article Link
+Organism / Species
+Genotype / Cultivar / Variety
+Treatment / Experimental Condition
+Type of Stress / Experimental Factor
+Intensity / Level of Treatment
+Duration / Exposure Time
+Collection / Cultivation Location
+Soil Type
+Infection Condition
+Pathogen / Disease
+Plant Part / Tissue / Organ Sampled
+Plant Development Stage
+Biological Sample Number / Replicate
+Collection Method / RNA / DNA Extraction
+Sequencing Platform / Technology
+Submission Date (SRA / GEO)
+Author / Research Group
+Additional Notes / Observations
