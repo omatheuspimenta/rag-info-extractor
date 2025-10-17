@@ -36,7 +36,8 @@ docling_logger = logging.getLogger('docling')
 logtext = logging.getLogger("rich")
 logtext.setLevel(20)
 
-SYSTEM_PROMPT_GENOTYPE = """You are a specialized scientific information extraction assistant with expertise in plant genomics, molecular biology, and bioinformatics. Your primary focus is extracting genotype-related information and NCBI accession identifiers from full-text research articles about plant species, particularly sugarcane (Saccharum spp.) and citrus (Citrus spp.).
+SYSTEM_PROMPT_GENOTYPE = """
+You are a specialized scientific information extraction assistant with expertise in plant genomics, molecular biology, and bioinformatics. Your primary focus is extracting genotype-related information and NCBI accession identifiers from full-text research articles about plant species, particularly sugarcane (Saccharum spp.) and citrus (Citrus spp.).
 
 Core Competencies:
 - Deep understanding of plant taxonomy, cultivar naming conventions, and variety nomenclature
@@ -45,21 +46,7 @@ Core Competencies:
 - Ability to distinguish between genotype mentions and other biological concepts
 - Recognition of implicit genotype information from experimental context
 
-Extraction Principles:
-1. Thoroughness: Analyze the ENTIRE document, including abstract, introduction, methods, results, discussion, acknowledgments, data availability statements, and references to supplementary materials
-2. Precision: Only extract information directly related to genotypes/cultivars used in the study
-3. Context awareness: Understand that genotype information may be:
-   - Explicitly stated: "cultivar 'Valencia'"
-   - Implied from context: "commercial variety widely used in Brazil"
-   - Referenced indirectly: "the same accessions as reported in Smith et al. 2020"
-   - Distributed across sections: cultivar mentioned in methods, accession in data availability
-4. Artifact tolerance: Handle noisy text from PDF extraction (irregular line breaks, OCR errors, formatting issues)
-5. Transparency: When information is missing, ambiguous, or located elsewhere, explicitly document this
-
-Output Requirements:
-- Respond ONLY with valid JSON following the specified schema
-- No markdown code blocks, no explanatory text outside the JSON structure
-- Use the "notes" field for observations, uncertainties, or contextual information
+CRITICAL RULE: You MUST extract information ONLY from the provided article text. DO NOT use external knowledge, assumptions, or information from other sources. If information is not present in the article, explicitly indicate it as null or missing.
 """
 
 class PromptTemplates:
@@ -72,64 +59,230 @@ class PromptTemplates:
             #TODO add more prompts here
         }
 
-    def _genotype_prompt(self, article_full_text:str) -> str:
-            
-        USER_PROMPT = f"""Extract all genotype and NCBI accession information from the following scientific article. Read the ENTIRE text carefully.
-        Find in Materials and Methods, RNA-Seq analysis, Data Availability or Supplementary Information.
+    def _genotype_prompt(self, article_full_text:str) -> str:    
+    # Few-shot examples showing desired behavior
+        FEW_SHOT_EXAMPLES = """
+    Example 1 - Complete Information:
 
-Target Information:
-Genotypes: cultivar names, variety names, breeding lines, strain identifiers, clone designations, wild-type references, mutant names, genetic backgrounds, germplasm accessions, or any designation identifying specific plant genetic material.
+    Article excerpt: "RNA was extracted from leaf samples of sugarcane cultivar 'SP80-3280' and 'RB867515'. Libraries were sequenced and deposited in NCBI under BioProject PRJNA123456 with individual SRA accessions SRR9876543 and SRR9876544 for SP80-3280 and RB867515, respectively."
 
-NCBI Accessions: BioProject IDs (PRJNA*), SRA IDs (SRR*, SRX*, SRP*), BioSample IDs (SAMN*, SAMD*, SAME*), GEO IDs (GSE*, GSM*), GenBank accessions, or any NCBI database identifier.
+    Reasoning Steps:
+    1. Identify genotypes: Two cultivars mentioned - 'SP80-3280' and 'RB867515'
+    2. Identify accessions: BioProject PRJNA123456, SRA accessions SRR9876543 and SRR9876544
+    3. Link genotypes to accessions: Text explicitly links SP80-3280 to SRR9876543 and RB867515 to SRR9876544
+    4. Assess confidence: HIGH - explicit mentions with clear associations
+    5. Determine source location: This is in main text (methods section)
 
-Extraction Guidelines:
+    Output:
+    {
+        "entries": [
+            {
+                "accession": "SRR9876543",
+                "accession_type": "SRA",
+                "organism": "Saccharum spp.",
+                "genotype": "SP80-3280",
+                "confidence": "high",
+                "source_location": "main text",
+                "evidence_text": "SRA accessions SRR9876543 for SP80-3280"
+            },
+            {
+                "accession": "SRR9876544",
+                "accession_type": "SRA",
+                "organism": "Saccharum spp.",
+                "genotype": "RB867515",
+                "confidence": "high",
+                "source_location": "main text",
+                "evidence_text": "SRR9876544 for RB867515"
+            }
+        ],
+        "notes": "Both cultivars clearly identified with direct SRA accession links under BioProject PRJNA123456"
+    }
 
-1. Association: Link each genotype with its corresponding NCBI accession when both are present. If multiple genotypes share the same accession, create separate entries.
+    Example 2 - Missing Accession:
 
-2. Confidence Levels:
-   - HIGH: Genotype and accession explicitly mentioned together OR genotype clearly stated with complete information
-   - MEDIUM: Genotype inferred from context, or accession mentioned separately from genotype but linkable
-   - LOW: Ambiguous mentions, incomplete information, or references to external sources
+    Article excerpt: "We analyzed drought stress responses in citrus variety 'Pera' grown under field conditions. Detailed sequencing information is provided in Supplementary Table S3."
 
-3. Source Location Tracking:
-   - "main text" - information in the primary article body
-   - "supplementary file" - referenced in supplementary materials/tables/datasets
-   - "data availability statement" - mentioned in data/code availability sections
-   - "methods appendix" - in methods or materials sections with detail
-   - "not found" - information not provided anywhere in the document
+    Reasoning Steps:
+    1. Identify genotypes: One variety mentioned - 'Pera'
+    2. Identify accessions: No accessions in this excerpt
+    3. Check supplementary reference: Article mentions Supplementary Table S3 contains sequencing info
+    4. Assess confidence: MEDIUM - genotype is clear, but accession location is referenced
+    5. Determine source location: Genotype in main text, accession in supplementary file
 
-4. Evidence Text: Include a brief quote (10-30 words) from the article for MEDIUM or LOW confidence entries to justify the extraction.
+    Output:
+    {
+        "entries": [
+            {
+                "accession": null,
+                "accession_type": null,
+                "organism": "Citrus spp.",
+                "genotype": "Pera",
+                "confidence": "medium",
+                "source_location": "main text",
+                "evidence_text": "citrus variety 'Pera' grown under field conditions"
+            }
+        ],
+        "notes": "Accession information referenced in Supplementary Table S3 but not provided in main text"
+    }
 
-5. Missing Information Protocol:
-   - If genotype is mentioned but accession is missing: create entry with accession as null, note where accession might be found
-   - If accession is mentioned but genotype is unclear: create entry, use confidence "low" or "medium"
-   - If information is explicitly stated to be in supplementary files: document this in source_location and notes
-   - If neither is found: return empty entries array with explanatory note
+    Example 3 - Table Format:
 
-6. Multiple Genotypes: Create separate entries for each distinct genotype, even if they share the same study or accession series.
+    Article excerpt: "Sequencing data for all samples are summarized in Table 2:
 
- Article Text:
-{article_full_text}
+    Table 2. Sample information and sequencing accessions
+    | Sample ID | Cultivar    | Tissue | SRA Accession | BioSample    |
+    |-----------|-------------|--------|---------------|--------------|
+    | S1        | Valencia    | Leaf   | SRR12345678   | SAMN10001234 |
+    | S2        | Valencia    | Root   | SRR12345679   | SAMN10001235 |
+    | S3        | Hamlin      | Leaf   | SRR12345680   | SAMN10001236 |
 
-Required JSON Output Format:
+    All samples are deposited under BioProject PRJNA555555."
 
-{{
-    "entries": [
-        {{
-            "accession": "string or null",
-            "accession_type": "BioProject | SRA | BioSample | GEO | GenBank | Other | null",
-            "organism": "string (scientific name)",
-            "genotype": "string (cultivar/variety/strain name or description)",
-            "confidence": "high | medium | low",
-            "source_location": "main text | supplementary file | data availability statement | methods appendix | not found",
-            "evidence_text": "string or null (required for medium/low confidence)"
-        }}
-    ],
-    "notes": "string (observations, uncertainties, references to external sources, or explanations)"
-}}
+    Reasoning Steps:
+    1. Identify table structure: This is clearly a table with pipe-delimited columns
+    2. Parse table headers: Sample ID, Cultivar, Tissue, SRA Accession, BioSample
+    3. Extract row data: Three samples with cultivars Valencia (2x) and Hamlin (1x)
+    4. Link genotypes to accessions: Each row links cultivar to specific SRA and BioSample IDs
+    5. Assess confidence: HIGH - explicit tabular mapping with clear associations
+    6. Note BioProject: PRJNA555555 applies to all samples
 
-CRITICAL: Return ONLY the JSON object. No additional text, no markdown formatting, no code blocks. DO NOT CREATE information not present in the article, if the information is missing, return null or empty fields as specified.
-        """
+    Output:
+    {
+        "entries": [
+            {
+                "accession": "SRR12345678",
+                "accession_type": "SRA",
+                "organism": "Citrus spp.",
+                "genotype": "Valencia",
+                "confidence": "high",
+                "source_location": "main text",
+                "evidence_text": "Table 2: Sample S1, Cultivar Valencia, SRA Accession SRR12345678"
+            },
+            {
+                "accession": "SRR12345679",
+                "accession_type": "SRA",
+                "organism": "Citrus spp.",
+                "genotype": "Valencia",
+                "confidence": "high",
+                "source_location": "main text",
+                "evidence_text": "Table 2: Sample S2, Cultivar Valencia, SRA Accession SRR12345679"
+            },
+            {
+                "accession": "SRR12345680",
+                "accession_type": "SRA",
+                "organism": "Citrus spp.",
+                "genotype": "Hamlin",
+                "confidence": "high",
+                "source_location": "main text",
+                "evidence_text": "Table 2: Sample S3, Cultivar Hamlin, SRA Accession SRR12345680"
+            }
+        ],
+        "notes": "All samples under BioProject PRJNA555555. Information extracted from Table 2 with clear cultivar-to-accession mappings."
+    }
+
+    Example 4 - No Information Found:
+
+    Article excerpt: "Our review summarizes recent advances in plant genomics and their applications in breeding programs."
+
+    Reasoning Steps:
+    1. Search for genotypes: No specific cultivars, varieties, or strains mentioned
+    2. Search for accessions: No NCBI identifiers present
+    3. Check context: This is a review article without experimental data
+    4. Assess completeness: No extractable information
+
+    Output:
+    {
+        "entries": [],
+        "notes": "This appears to be a review article with no specific genotype information or NCBI accessions mentioned in the provided text"
+    }
+    """
+
+        USER_PROMPT = f"""Extract all genotype and NCBI accession information from the scientific article below. You MUST follow these steps:
+
+    STEP 1 - SYSTEMATIC READING:
+    Read the ENTIRE article text carefully, section by section:
+    - Abstract: Check for study overview and organism mentions
+    - Introduction: Look for study context and varieties being investigated
+    - Materials and Methods: PRIMARY source for genotypes and sample descriptions
+    - Results: Check for any additional genotype details or data references
+    - Discussion: May contain references to data deposition
+    - Data Availability Statement: CRITICAL section for NCBI accessions
+    - Supplementary Information references: Note what information is external
+    - Acknowledgments: Sometimes contains data repository information
+    - TABLES: Pay special attention to tables (often formatted with pipes |, dashes -, or aligned columns). Tables frequently contain:
+        * Sample/accession mappings (e.g., "Sample ID | Cultivar | Accession")
+        * Genotype lists with corresponding metadata
+        * Sequencing run information with SRA/BioSample IDs
+        * Look for column headers like: Sample, Cultivar, Variety, Genotype, Accession, BioProject, SRA, BioSample, Run ID
+
+    STEP 2 - INFORMATION IDENTIFICATION:
+    Target Information to Extract (ONLY from the provided text):
+    a) Genotypes: cultivar names, variety names, breeding lines, strain identifiers, clone designations, wild-type references, mutant names, genetic backgrounds, germplasm accessions
+    b) NCBI Accessions: BioProject IDs (PRJNA*), SRA IDs (SRR*, SRX*, SRP*), BioSample IDs (SAMN*, SAMD*, SAME*), GEO IDs (GSE*, GSM*), GenBank accessions
+
+    SPECIAL ATTENTION TO TABLES:
+    - Tables may appear as:
+        * Pipe-delimited format: | Column1 | Column2 | Column3 |
+        * Space-aligned columns with headers and data rows
+        * CSV-like format with commas
+        * Mixed format with irregular spacing
+    - Look for table indicators: "Table X", "Table X.", numbered tables, or section headers like "Sample Information"
+    - Common table column headers that contain target information:
+        * Genotype columns: Cultivar, Variety, Genotype, Strain, Line, Clone, Accession (germplasm), Sample Name, Material
+        * NCBI columns: SRA, BioSample, Run, Accession, GEO, GenBank, BioProject ID
+    - Read tables row by row, extracting genotype-accession pairs from each row
+    - If a BioProject is mentioned before/after the table, it applies to all entries in that table
+
+    STEP 3 - ASSOCIATION ANALYSIS:
+    - Link each genotype with its corresponding NCBI accession when both are present
+    - If multiple genotypes share the same accession series, create separate entries
+    - Note any ambiguities in associations
+
+    STEP 4 - CONFIDENCE ASSESSMENT:
+    - HIGH: Explicit mention with clear association between genotype and accession
+    - MEDIUM: Genotype clear but accession referenced elsewhere, OR accession clear but genotype inferred from context
+    - LOW: Ambiguous mentions, incomplete information, or indirect references
+
+    STEP 5 - SOURCE TRACKING:
+    - "main text": Information in the primary article body
+    - "supplementary file": Referenced in supplementary materials (but actual content not in provided text)
+    - "data availability statement": In data/code availability sections
+    - "methods appendix": In detailed methods/materials sections
+    - "not found": Information explicitly missing from the document
+
+    STEP 6 - GENERATE OUTPUT:
+    Create JSON following the exact format shown in the examples above.
+
+    {FEW_SHOT_EXAMPLES}
+
+    Now analyze this article:
+
+    ==== ARTICLE TEXT BEGIN ====
+    {article_full_text}
+    ==== ARTICLE TEXT END ====
+
+    CRITICAL REMINDERS:
+    - Extract ONLY information present in the article text above
+    - DO NOT use external knowledge or make assumptions
+    - If information is missing, use null and explain in notes
+    - Include evidence_text for medium/low confidence entries
+    - Return ONLY valid JSON, no markdown, no code blocks, no additional text
+
+    Required JSON Output Format:
+    {{
+        "entries": [
+            {{
+                "accession": "string or null",
+                "accession_type": "BioProject | SRA | BioSample | GEO | GenBank | Other | null",
+                "organism": "string (scientific name)",
+                "genotype": "string (cultivar/variety/strain)",
+                "confidence": "high | medium | low",
+                "source_location": "main text | supplementary file | data availability statement | methods appendix | not found",
+                "evidence_text": "string or null (required for medium/low confidence)"
+            }}
+        ],
+        "notes": "string (observations, uncertainties, or explanations)"
+    }}"""
 
         return USER_PROMPT
 
@@ -158,7 +311,8 @@ class ExtractText:
         )
         try:
             conv_result = doc_converter.convert(pdf_path)
-            return conv_result.document.export_to_text()
+            # return conv_result.document.export_to_text()
+            return conv_result.document.export_to_markdown()
         except Exception as e:
             logtext.error(f"Error processing PDF file {pdf_path}: {e}")
             return ""
@@ -201,7 +355,7 @@ class ExtractText:
             return "", ""
             
 class ExtractInfo:
-    def __init__(self, model: str = 'llama3.1'):
+    def __init__(self, model: str = 'llama3.3:70b'):
         self.model = model
         self._check_model()
         # self.extractor = ExtractText()
@@ -222,7 +376,8 @@ class ExtractInfo:
         self.prompter = PromptTemplates(text)
         prompt = self.prompter.prompts.get(objective)
         # logtext.info(f"Using model: {self.model}")
-        # logtext.info(f"Using prompt: {prompt}")
+        logtext.info("\n\n")
+        logtext.info(f"Using prompt: {prompt}")
         if not prompt:
             logtext.error(f"No prompt found for objective: {objective}")
             return ""
@@ -237,8 +392,9 @@ class ExtractInfo:
                     "temperature": 0.1,  # for consistency
                     "top_k": 10, # more focused
                     "top_p": 0.5,  # more conservative
-                    "num_predict": 500,  # max tokens predict for response
+                    "num_predict": 2000,  # max tokens predict for response
                     "stream": False,
+                    "num_ctx": 8192,  # context window
                 },
             )   
             # get the class of response variable
@@ -257,7 +413,7 @@ def get_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description='Extract biological data from academic articles')
     parser.add_argument('--input', type=Path, help='Directory containing PDF and JSON files')
     parser.add_argument('--output', type=Path, help='Directory to save results')
-    parser.add_argument('--model', default='llama3.1', help='Ollama model name. Available models can be listed with "ollama list" command. Actually we have deepseek-r1 and qwen2.5:14b')
+    parser.add_argument('--model', default='llama3.3:70b', help='Ollama model name. Available models can be listed with "ollama list" command. Actually we have llama3.1, llama3.3:70b and qwen2.5:14b')
     
     return parser
 
