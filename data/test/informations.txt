@@ -1,21 +1,35 @@
-Identifier
-Study / Article Title
-DOI / Article Link
-Organism / Species
-Genotype / Cultivar / Variety
-Treatment / Experimental Condition
-Type of Stress / Experimental Factor
-Intensity / Level of Treatment
-Duration / Exposure Time
-Collection / Cultivation Location
-Soil Type
-Infection Condition
-Pathogen / Disease
-Plant Part / Tissue / Organ Sampled
-Plant Development Stage
-Biological Sample Number / Replicate
-Collection Method / RNA / DNA Extraction
-Sequencing Platform / Technology
-Submission Date (SRA / GEO)
-Author / Research Group
+Identifier - OK
+Study / Article Title - OK
+DOI / Article Link - verificar o PMDI ou scrap
+Organism / Species - OK Sugarcane and Citrus
+Genotype / Cultivar / Variety - 
+Treatment / Experimental Condition - TREATMENT
+Type of Stress / Experimental Factor - TREATMENT
+Intensity / Level of Treatment - TREATMENT
+Duration / Exposure Time - TREATMENT
+Collection / Cultivation Location - 
+Soil Type - TREATMENT ou Localizacao
+Infection Condition - TREATMENT
+Pathogen / Disease - TREATMENT
+Plant Part / Tissue / Organ Sampled - 
+Plant Development Stage - 
+Biological Sample Number / Replicate - PENSAR SOBRE 
+Collection Method / RNA / DNA Extraction - OK
+Sequencing Platform / Technology - OK
+Submission Date (SRA / GEO) - OK
+Author / Research Group - 
 Additional Notes / Observations
+
+# Sugarcane - RNA
+# relacionados a localizacao
+'lat_lon', 'geo_loc_name', 'geo_loc_name_country', 'geo_loc_name_country_continent', 'geographic_location_(latitude)', 'geographic_location_(longitude)', 
+
+# localization and treatment (field, green house, soil type, ...)
+'isolation_and_growth_condition', 'plant_growth_medium', 
+
+# treatment
+'treatment', 'tissue', 'dev_stage', 'age', 'isolate', 'plant_structure', 'plant_developmental_stage',
+
+
+# relacionado ao genotipo
+'genotype', 'Cultivar'
